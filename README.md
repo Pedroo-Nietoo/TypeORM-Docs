@@ -1,6 +1,6 @@
 # TypeORM Docs
 
-![Project Banner](https://raw.githubusercontent.com/Pedroo-Nietoo/prisma-schema-docs/main/images/project_image.png)
+![Project Banner](https://raw.githubusercontent.com/Pedroo-Nietoo/TypeORM-Docs/refs/heads/main/images/project_image.png)
 
 ## Overview
 
