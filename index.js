@@ -109,6 +109,7 @@ function generateHtmlDocumentation(models) {
     return `
     <html>
     <head>
+        <link rel="icon" href="https://avatars.githubusercontent.com/u/20165699?s=200&v=4" type="image/png">
         <title>TypeORM Entities Documentation</title>
         <style>
             body { font-family: Arial, sans-serif; display: flex; color: #333; margin: 0; }
