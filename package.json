@@ -1,0 +1,31 @@
+{
+  "name": "typeorm-docs",
+  "version": "1.0.0",
+  "description": "Generate HTML and Markdown documentation from TypeORM entities.",
+  "main": "./index.js",
+  "scripts": {
+    "docs": "node index.js",
+    "test": "jest"
+  },
+  "bin": {
+    "typeorm-docs": "./index.js"
+  },
+  "keywords": [
+    "typeorm",
+    "documentation",
+    "docs",
+    "html",
+    "markdown"
+  ],
+  "author": "Pedro Nieto",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/parser": "^7.23.0",
+    "@babel/traverse": "^7.23.0",
+    "glob": "^9.3.5",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
