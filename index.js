@@ -10,6 +10,9 @@ async function main() {
     const entitiesDir = path.join(process.cwd(), 'src/entities');
     const outputDir = path.join(process.cwd(), 'docs');
 
+    const args = process.argv.slice(2);
+    const isDarkMode = args.includes('-d') || args.includes('--dark')
+
     console.log(`Scanning for entities in 'src/entities'...`);
 
     try {
@@ -26,7 +29,7 @@ async function main() {
 
         models.sort((a, b) => a.name.localeCompare(b.name));
 
-        const htmlContent = generateHtmlDocumentation(models);
+        const htmlContent = generateHtmlDocumentation(models, isDarkMode);
 
         if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
         fs.writeFileSync(path.join(outputDir, 'index.html'), htmlContent, 'utf-8');
@@ -105,86 +108,169 @@ function parseTypeORMEntity(filePath) {
     return entityName ? { name: entityName, fields } : null;
 }
 
-function generateHtmlDocumentation(models) {
+function generateHtmlDocumentation(models, isDarkMode) {
+    const darkThemeCSS = `
+        body { font-family: Arial, sans-serif; display: flex; color: #e0e0e0; margin: 0; background-color: #121212; }
+        .sidebar { 
+            width: 250px; 
+            padding: 20px; 
+            background-color: #1e1e1e; 
+            position: fixed; 
+            height: 96vh; 
+            overflow-y: auto; 
+            border-right: 1px solid #333;
+        }
+        .content { 
+            margin-left: 270px; 
+            padding: 50px; 
+            flex-grow: 1; 
+            background-color: #1c1c1c; 
+        }
+        .model { margin-bottom: 40px; }
+        .model-name { font-size: 24px; font-weight: bold; color: #76c7c0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: #e0e0e0; }
+        th, td { padding: 8px 12px; text-align: left; border: 1px solid #333; }
+        th { background-color: #333; color: #76c7c0; }
+        .model-link, .field-link {
+            color: #76c7c0;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .model-fields {
+            border-left: 2px solid #444;
+            padding-left: 10px;
+            margin-bottom: 20px;
+        }
+        .field-link { 
+            padding: 4px 0;
+            color: #9ca3af;
+        }
+        .field-link:hover, .model-link:hover {
+            color: #76c7c0;
+        }
+        .target-link {
+            color: #bb86fc;
+            font-style: italic;
+            text-decoration-style: wavy;
+        }
+        .target-link:hover {
+            color: #df8efc;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .button {
+            padding: 10px;
+            margin: 18px;
+            background-color: transparent;
+            color: #76c7c0;
+            border: 1px solid #76c7c0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .button:hover {
+            background-color: #76c7c0;
+            color: #121212;
+        }
+        .relation, .type { font-weight: 600; }
+        .relation { color: #bb86fc; }
+        .type { color: #4fc3f7; }
+        .required { color: #ff8a80; font-weight: bold; }
+        .optional { color: #8c9eff; }
+    `;
+
+    const lightThemeCSS = `
+    body { font-family: Arial, sans-serif; display: flex; color: #333; margin: 0; }
+        .sidebar { 
+            width: 250px; 
+            padding: 20px; 
+            background-color: #f0f0f0; 
+            position: fixed; 
+            height: 96vh; 
+            overflow-y: auto; 
+        }
+        .content { 
+            margin-left: 270px; 
+            padding: 50px; 
+            flex-grow: 1; 
+            background-color: #fff; 
+        }
+        .model { margin-bottom: 40px; }
+        .model-name { font-size: 24px; font-weight: bold; color: #2e5972; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px 12px; text-align: left; border: 1px solid #ccc; }
+        th { background-color: #2e5972; color: #fff; }
+        .model-link, .field-link {
+            color: #333;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .model-fields {
+            border-left: 2px solid #ccc;
+            padding-left: 10px;
+            margin-bottom: 20px;
+        }
+        .field-link { 
+            padding: 4px 0;
+            color: #6c757d;
+        }
+        .field-link:hover, .model-link:hover {
+            color: #2e5972;
+        }
+        .target-link {
+            color: #6B46C1;
+            font-style: italic;
+            text-decoration-style: wavy;
+        }
+        .target-link:hover {
+            color: #926fe3;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .button {
+            padding: 10px;
+            margin: 18px;
+            background-color: transparent;
+            color: #2e5972;
+            border: 1px solid #2e5972;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .button:hover {
+            background-color: #2e5972;
+            color: #fff;
+        }
+        .relation, .type { font-weight: 600; }
+        .relation { color: #6B46C1; }
+        .type { color: #2B6CB0; }
+        .required { color: #D53F8C; font-weight: bold; }
+        .optional { color: #718096; }
+    `;
+
+    const themeCSS = isDarkMode ? darkThemeCSS : lightThemeCSS;
+
     return `
     <html>
     <head>
         <link rel="icon" href="https://avatars.githubusercontent.com/u/20165699?s=200&v=4" type="image/png">
         <title>TypeORM Entities Documentation</title>
         <style>
-            body { font-family: Arial, sans-serif; display: flex; color: #333; margin: 0; }
-            .sidebar { 
-                width: 250px; 
-                padding: 20px; 
-                background-color: #f0f0f0; 
-                position: fixed; 
-                height: 96vh; 
-                overflow-y: auto; 
-            }
-            .content { 
-                margin-left: 270px; 
-                padding: 50px; 
-                flex-grow: 1; 
-                background-color: #fff; 
-            }
-            .model { margin-bottom: 40px; }
-            .model-name { font-size: 24px; font-weight: bold; color: #2e5972; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { padding: 8px 12px; text-align: left; border: 1px solid #ccc; }
-            th { background-color: #2e5972; color: #fff; }
-            .model-link, .field-link {
-                color: #333;
-                text-decoration: none;
-                font-weight: bold;
-                display: block;
-                margin-bottom: 8px;
-            }
-            .model-fields {
-                border-left: 2px solid #ccc;
-                padding-left: 10px;
-                margin-bottom: 20px;
-            }
-            .field-link { 
-                padding: 4px 0;
-                color: #6c757d;
-            }
-            .field-link:hover, .model-link:hover {
-                color: #2e5972;
-            }
-            .target-link {
-                color: #6B46C1;
-                font-style: italic;
-                text-decoration-style: wavy;
-            }
-            .target-link:hover {
-                color: #926fe3;
-            }
-            .header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
-            }
-            .button {
-                padding: 10px;
-                margin: 18px;
-                background-color: transparent;
-                color: #2e5972;
-                border: 1px solid #2e5972;
-                border-radius: 10px;
-                cursor: pointer;
-                font-size: 16px;
-                transition: 0.3s;
-            }
-            .button:hover {
-                background-color: #2e5972;
-                color: #fff;
-            }
-            .relation, .type { font-weight: 600; }
-            .relation { color: #6B46C1; }
-            .type { color: #2B6CB0; }
-            .required { color: #D53F8C; font-weight: bold; }
-            .optional { color: #718096; }
+            ${themeCSS}
         </style>
     </head>
     <body>

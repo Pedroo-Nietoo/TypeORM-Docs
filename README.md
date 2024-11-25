@@ -32,6 +32,12 @@ Once installed, you can generate documentation by running the following command:
 npx typeorm-docs
 ```
 
+Or, if you prefer to generate the documentation on dark mode:
+
+```bash
+npx typeorm-docs -d
+```
+
 This will create an `index.html` file in the `docs` directory, containing the generated documentation from your `src/entities` folder.
 
 To use `typeorm-docs`, ensure you have your TypeORM entities in the `src/entities` directory of your project. The command will look for the entities and generate the documentation based on their content.

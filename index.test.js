@@ -51,7 +51,7 @@ describe('parseTypeORMEntity', () => {
 });
 
 describe('generateHtmlDocumentation', () => {
-    it('should generate HTML documentation for given models', () => {
+    it('should generate light theme HTML documentation for given models', () => {
         const models = [
             {
                 name: 'User',
@@ -66,7 +66,34 @@ describe('generateHtmlDocumentation', () => {
             }
         ];
 
-        const result = generateHtmlDocumentation(models);
+        const result = generateHtmlDocumentation(models, false);
+
+        expect(result).toContain('<div class="model-name">User</div>');
+        expect(result).toContain('<td>id</td>');
+        expect(result).toContain('<td class="type">number</td>');
+        expect(result).toContain('<td class="required">Yes</td>');
+        expect(result).toContain('<table>');
+        expect(result).toContain('<thead>');
+        expect(result).toContain('<tr id="User-id">');
+        
+    });
+
+    it('should generatedark theme HTML documentation for given models', () => {
+        const models = [
+            {
+                name: 'User',
+                fields: [
+                    { name: 'id', type: 'number', isPrimary: true, isRequired: true },
+                    { name: 'firstName', type: 'unknown', isPrimary: false, isRequired: false },
+                    { name: 'lastName', type: 'unknown', isPrimary: false, isRequired: false },
+                    { name: 'email', type: 'unknown', isPrimary: false, isRequired: false },
+                    { name: 'password', type: 'unknown', isPrimary: false, isRequired: false },
+                    { name: 'isActive', type: 'unknown', isPrimary: false, isRequired: false }
+                ]
+            }
+        ];
+
+        const result = generateHtmlDocumentation(models, true);
 
         expect(result).toContain('<div class="model-name">User</div>');
         expect(result).toContain('<td>id</td>');
